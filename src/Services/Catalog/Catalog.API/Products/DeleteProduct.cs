@@ -12,7 +12,7 @@ public class DeleteProductCommandValidator : AbstractValidator<DeleteProductComm
     }
 }
 
-internal class DeleteProductCommandHandler
+public class DeleteProductCommandHandler
     (IDocumentSession session)
     : ICommandHandler<DeleteProductCommand, DeleteProductResponse>
 {
