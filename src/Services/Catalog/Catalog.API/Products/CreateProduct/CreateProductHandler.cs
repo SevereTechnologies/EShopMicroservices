@@ -1,38 +1,31 @@
 ﻿namespace Catalog.API.Products.CreateProduct;
 
-/// <summary>
-/// The create product command.
-/// </summary>
-public record CreateProductCommand : ICommand<CreateProductResult>
+public record CreateProductCommand(string Name, List<string> Category, string Description, string ImageName, decimal Price)
+    : ICommand<CreateProductResult>;
+
+public record CreateProductResult(Guid Id);
+
+public class CreateProductCommandValidator : AbstractValidator<CreateProductCommand>
 {
-    public string Name { get; set; } = default!;
-    public List<string> Category { get; set; } = new();
-    public string Description { get; set; } = default!;
-    public string ImageName { get; set; } = default!;
-    public decimal Price { get; set; }
+    public CreateProductCommandValidator()
+    {
+        RuleFor(x => x.Name).NotEmpty().WithMessage("Name is required");
+        RuleFor(x => x.Category).NotEmpty().WithMessage("Category is required");
+        RuleFor(x => x.ImageName).NotEmpty().WithMessage("ImageName is required");
+        RuleFor(x => x.Price).GreaterThan(0).WithMessage("Price must be greater than 0");
+    }
 }
 
-/// <summary>
-/// The create product result.
-/// </summary>
-public record CreateProductResult
+internal class CreateProductCommandHandler
+    (IDocumentSession session)
+    : ICommandHandler<CreateProductCommand, CreateProductResult>
 {
-    public Guid Id { get; set; }
-}
-
-/// <summary>
-/// The create product handler.
-/// </summary>
-public class CreateProductHandler(IDocumentSession session) : ICommandHandler<CreateProductCommand, CreateProductResult>
-{
-    /// <summary>
-    /// Handle and return a task of type createproductresponse.
-    /// </summary>
-    /// <param name="command">The command.</param>
-    /// <param name="cancellationToken">The cancellation token.</param>
-    /// <returns><![CDATA[Task<CreateProductResponse>]]></returns>
     public async Task<CreateProductResult> Handle(CreateProductCommand command, CancellationToken cancellationToken)
     {
+        //create Product entity from command object
+        //save to database
+        //return CreateProductResult result               
+
         var product = new Product
         {
             Name = command.Name,
@@ -42,11 +35,11 @@ public class CreateProductHandler(IDocumentSession session) : ICommandHandler<Cr
             Price = command.Price
         };
 
-        // save to database
+        //save to database
         session.Store(product);
         await session.SaveChangesAsync(cancellationToken);
 
-        // return result
-        return new CreateProductResult { Id = product.Id };
+        //return result
+        return new CreateProductResult(product.Id);
     }
 }
