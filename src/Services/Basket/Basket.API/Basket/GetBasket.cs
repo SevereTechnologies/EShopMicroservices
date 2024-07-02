@@ -1,14 +1,18 @@
-﻿namespace Basket.API.Basket;
+﻿using Basket.API.Data;
 
-public record GetBasketResponse(ShoppingCart Cart);
+namespace Basket.API.Basket;
 
-public record GetBasketQuery(string userName) : IQuery<GetBasketResponse>;
+public record GetBasketResponse(ShoppingCart? Cart);
 
-public class GetBasketQueryHandler : IQueryHandler<GetBasketQuery, GetBasketResponse>
+public record GetBasketQuery(string UserName) : IQuery<GetBasketResponse>;
+
+public class GetBasketQueryHandler(IBasketRepository repository) : IQueryHandler<GetBasketQuery, GetBasketResponse>
 {
     public async Task<GetBasketResponse> Handle(GetBasketQuery query, CancellationToken cancellationToken)
     {
-        return new GetBasketResponse(new ShoppingCart("jsevere"));
+        var basket = await repository.GetBasketAsync(query.UserName, cancellationToken);
+
+        return new GetBasketResponse(basket);
     }
 }
 
@@ -21,6 +25,10 @@ public class GetBasketEndpoints : ICarterModule
             var response = await sender.Send(new GetBasketQuery(userName));
 
             return Results.Ok(response);
+
+            //return response.Cart is null
+            //    ? Results.NotFound(response)
+            //    : Results.Ok(response);
         })
         .WithName("GetBasketByUserName")
         .Produces<GetBasketResponse>(StatusCodes.Status200OK)
